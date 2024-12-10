@@ -222,12 +222,13 @@ flowchart TB
     CD -->|"Processed audio"| DAC
     DAC -->|"Analog"| SP
 
-    style JF fill:#e1f5fe,stroke:#01579b
-    style JC fill:#fff3e0,stroke:#e65100
-    style LP fill:#f9f,stroke:#333
-    style CD fill:#fff3e0,stroke:#e65100
-    style DAC fill:#f1f8e9,stroke:#33691e
-    style SP fill:#f1f8e9,stroke:#33691e
+    style JF fill:#3b82f6,stroke:#1e40af,color:#ffffff
+    style JC fill:#f97316,stroke:#c2410c,color:#ffffff
+    style LP fill:#8b5cf6,stroke:#5b21b6,color:#ffffff
+    style CD fill:#f97316,stroke:#c2410c,color:#ffffff
+    style DAC fill:#22c55e,stroke:#15803d,color:#ffffff
+    style SP fill:#22c55e,stroke:#15803d,color:#ffffff
+
 ```
 
 ### Component Flow
