@@ -11,6 +11,7 @@ This guide explains how to implement Digital Signal Processing (DSP) in your HiF
 - [Deployment](#deployment)
 - [Testing](#testing)
 - [Troubleshooting](#troubleshooting)
+- [System Architecture](#system-architecture)
 
 ## System Overview
 
@@ -202,6 +203,41 @@ top -p $(pgrep camilladsp)
 # Record processed output
 arecord -D hw:YourDAC,0 -f cd output.wav
 ```
+## System Architecture
+
+### Audio Processing Flow
+
+```mermaid
+flowchart TB
+    JF[Jellyfin Server]
+    JC[JellyCLI]
+    LP[ALSA Loopback]
+    CD[CamillaDSP]
+    DAC[Sound Card/DAC]
+    SP[Speakers]
+
+    JF -->|"Stream music"| JC
+    JC -->|"Audio"| LP
+    LP -->|"Capture"| CD
+    CD -->|"Processed audio"| DAC
+    DAC -->|"Analog"| SP
+
+    style JF fill:#e1f5fe,stroke:#01579b
+    style JC fill:#fff3e0,stroke:#e65100
+    style LP fill:#f9f,stroke:#333
+    style CD fill:#fff3e0,stroke:#e65100
+    style DAC fill:#f1f8e9,stroke:#33691e
+    style SP fill:#f1f8e9,stroke:#33691e
+```
+
+### Component Flow
+
+1. **Jellyfin Server** → Streams your music library
+2. **JellyCLI** → Receives and plays the stream
+3. **ALSA Loopback** → Virtual sound card for routing
+4. **CamillaDSP** → Processes audio (EQ, filters)
+5. **Sound Card/DAC** → Converts to analog
+6. **Speakers** → Final audio output
 
 ## Contributing
 
@@ -211,98 +247,3 @@ For issues, improvements, or discussions, please open a ticket in the repository
 
 - CamillaDSP: [HEnquist/camilladsp](https://github.com/HEnquist/camilladsp)
 - JellyCLI: [tryffel/jellycli](https://github.com/tryffel/jellycli)
-
-## System Architecture
-
-### Audio Processing Flow
-
-```mermaid
-flowchart LR
-    subgraph Remote["Remote Server"]
-        JF[Jellyfin Server]
-    end
-    
-    subgraph Local["Local Audio Server"]
-        direction TB
-        JC[JellyCLI]
-        
-        subgraph ALSA["ALSA Layer"]
-            direction LR
-            LP["Loopback Device"]
-            style LP fill:#f9f,stroke:#333
-            subgraph Loop["Loopback Pairs"]
-                LPO["Playback (0,0)"]
-                LPI["Capture (1,0)"]
-            end
-        end
-        
-        subgraph DSP["DSP Processing"]
-            CD["CamillaDSP"]
-            CF["Filters & EQ"]
-        end
-        
-        DAC["Physical DAC/\nSound Card"]
-    end
-    
-    subgraph Output["Audio Output"]
-        SP["Speakers/\nHeadphones"]
-    end
-    
-    %% Connections
-    JF -->|"Stream Audio"| JC
-    JC -->|"PCM Data"| LPO
-    LPO -->|"Virtual Route"| LPI
-    LPI -->|"Capture"| CD
-    CD -->|"Apply"| CF
-    CF -->|"Processed Audio"| DAC
-    DAC -->|"Analog Signal"| SP
-    
-    %% Styles
-    classDef server fill:#e1f5fe,stroke:#01579b
-    classDef process fill:#fff3e0,stroke:#e65100
-    classDef hardware fill:#f1f8e9,stroke:#33691e
-    
-    class JF,Remote server
-    class JC,CD,CF process
-    class DAC,SP hardware
-```
-
-### Component Descriptions
-
-1. **Jellyfin Server**
-   - Hosts media library
-   - Streams audio to JellyCLI
-   - Handles metadata and library management
-
-2. **JellyCLI**
-   - Headless Jellyfin client
-   - Connects to Jellyfin server
-   - Outputs audio to ALSA device
-
-3. **ALSA Loopback**
-   - Virtual sound card
-   - Creates internal audio routing
-   - Two subdevices:
-     * Playback (hw:Loopback,0,0)
-     * Capture (hw:Loopback,1,0)
-
-4. **CamillaDSP**
-   - Real-time audio processing
-   - Applies filters and EQ
-   - Configurable pipeline
-
-5. **Physical Output**
-   - DAC/Sound card
-   - Final analog conversion
-   - Physical audio output
-
-### Data Flow
-
-1. Audio stream starts from Jellyfin server
-2. JellyCLI receives and decodes the stream
-3. Audio is sent to Loopback capture device
-4. CamillaDSP captures from Loopback device
-5. DSP processing is applied
-6. Processed audio goes to physical output
-7. DAC converts to analog signal
-8. Sound is output through speakers
